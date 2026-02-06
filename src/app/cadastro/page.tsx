@@ -1,0 +1,333 @@
+"use client";
+
+import { useEffect, useState, FormEvent } from "react";
+import { Quota } from "@/types";
+import { SELLERS } from "@/lib/constants";
+import { UserPlus, CheckCircle, AlertCircle } from "lucide-react";
+
+interface FormData {
+  nome: string;
+  email: string;
+  cargo: string;
+  whatsapp: string;
+  empresa: string;
+  cpf: string;
+  nomeCredencial: string;
+  empresaCredencial: string;
+  necessidadesEspeciais: string;
+  atendimentoEspecifico: string;
+  vendedor: string;
+  cota: string;
+}
+
+const emptyForm: FormData = {
+  nome: "",
+  email: "",
+  cargo: "",
+  whatsapp: "",
+  empresa: "",
+  cpf: "",
+  nomeCredencial: "",
+  empresaCredencial: "",
+  necessidadesEspeciais: "Não",
+  atendimentoEspecifico: "Não",
+  vendedor: "",
+  cota: "",
+};
+
+export default function CadastroPage() {
+  const [form, setForm] = useState<FormData>(emptyForm);
+  const [quotas, setQuotas] = useState<Quota[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/quotas")
+      .then((r) => r.json())
+      .then(setQuotas)
+      .catch(console.error);
+  }, []);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Auto-fill credential fields if empty
+    if (name === "nome" && !form.nomeCredencial) {
+      setForm((prev) => ({ ...prev, [name]: value, nomeCredencial: value }));
+    }
+    if (name === "empresa" && !form.empresaCredencial) {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+        empresaCredencial: value,
+      }));
+    }
+  };
+
+  const formatCPF = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9)
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const formatWhatsApp = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch("/api/participants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erro ao cadastrar");
+      }
+
+      setMessage({ type: "success", text: "Participante cadastrado com sucesso!" });
+      setForm(emptyForm);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Erro ao cadastrar",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const availableQuotas = quotas.filter((q) => q.usados < q.quantidade);
+
+  return (
+    <div className="max-w-3xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Novo Cadastro</h1>
+        <p className="text-gray-500 mt-1">
+          Cadastre um novo participante para o Tax Summit 2026
+        </p>
+      </div>
+
+      {message && (
+        <div
+          className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+            message.type === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+          }`}
+        >
+          {message.type === "success" ? (
+            <CheckCircle size={20} />
+          ) : (
+            <AlertCircle size={20} />
+          )}
+          {message.text}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="card space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="label-field">Nome *</label>
+            <input
+              type="text"
+              name="nome"
+              value={form.nome}
+              onChange={handleChange}
+              className="input-field"
+              required
+            />
+          </div>
+          <div>
+            <label className="label-field">E-mail *</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="input-field"
+              required
+            />
+          </div>
+          <div>
+            <label className="label-field">Cargo *</label>
+            <input
+              type="text"
+              name="cargo"
+              value={form.cargo}
+              onChange={handleChange}
+              className="input-field"
+              required
+            />
+          </div>
+          <div>
+            <label className="label-field">WhatsApp *</label>
+            <input
+              type="text"
+              name="whatsapp"
+              value={form.whatsapp}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  whatsapp: formatWhatsApp(e.target.value),
+                }))
+              }
+              className="input-field"
+              placeholder="(11) 99999-9999"
+              required
+            />
+          </div>
+          <div>
+            <label className="label-field">Empresa *</label>
+            <input
+              type="text"
+              name="empresa"
+              value={form.empresa}
+              onChange={handleChange}
+              className="input-field"
+              required
+            />
+          </div>
+          <div>
+            <label className="label-field">CPF *</label>
+            <input
+              type="text"
+              name="cpf"
+              value={form.cpf}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  cpf: formatCPF(e.target.value),
+                }))
+              }
+              className="input-field"
+              placeholder="000.000.000-00"
+              required
+            />
+          </div>
+        </div>
+
+        <hr className="border-gray-200" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="label-field">Nome Credencial</label>
+            <input
+              type="text"
+              name="nomeCredencial"
+              value={form.nomeCredencial}
+              onChange={handleChange}
+              className="input-field"
+              placeholder="Igual ao nome se vazio"
+            />
+          </div>
+          <div>
+            <label className="label-field">Empresa Credencial</label>
+            <input
+              type="text"
+              name="empresaCredencial"
+              value={form.empresaCredencial}
+              onChange={handleChange}
+              className="input-field"
+              placeholder="Igual à empresa se vazio"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="label-field">Necessidades Especiais?</label>
+            <select
+              name="necessidadesEspeciais"
+              value={form.necessidadesEspeciais}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+          <div>
+            <label className="label-field">Atendimento Específico?</label>
+            <select
+              name="atendimentoEspecifico"
+              value={form.atendimentoEspecifico}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <hr className="border-gray-200" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="label-field">Vendedor Responsável *</label>
+            <select
+              name="vendedor"
+              value={form.vendedor}
+              onChange={handleChange}
+              className="input-field"
+              required
+            >
+              <option value="">Selecione...</option>
+              {SELLERS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label-field">Cota (opcional)</label>
+            <select
+              name="cota"
+              value={form.cota}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="">Sem cota</option>
+              {availableQuotas.map((q) => (
+                <option key={q.id} value={q.parceiro}>
+                  {q.parceiro} ({q.quantidade - q.usados} restantes)
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary flex items-center gap-2"
+          >
+            <UserPlus size={18} />
+            {submitting ? "Cadastrando..." : "Cadastrar Participante"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
