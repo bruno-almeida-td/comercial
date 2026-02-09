@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getQuotas, addQuota, deleteQuota } from "@/lib/sheets";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const quotas = await getQuotas();
-    return NextResponse.json(quotas);
+    const { data, error } = await supabase
+      .from("quotas")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Get quotas error:", error);
     return NextResponse.json(
@@ -18,24 +23,33 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json();
+    const body = await request.json();
 
-    if (!data.parceiro?.trim()) {
+    if (!body.parceiro?.trim()) {
       return NextResponse.json(
         { error: "Nome do parceiro é obrigatório" },
         { status: 400 }
       );
     }
 
-    if (!data.quantidade || data.quantidade < 1) {
+    if (!body.quantidade || body.quantidade < 1) {
       return NextResponse.json(
         { error: "Quantidade deve ser pelo menos 1" },
         { status: 400 }
       );
     }
 
-    const quota = await addQuota(data.parceiro.trim(), data.quantidade);
-    return NextResponse.json(quota, { status: 201 });
+    const { data, error } = await supabase
+      .from("quotas")
+      .insert({
+        parceiro: body.parceiro.trim(),
+        quantidade: body.quantidade,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("Add quota error:", error);
     return NextResponse.json(
@@ -57,19 +71,42 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deleted = await deleteQuota(id);
-    if (!deleted) {
+    // Get quota info
+    const { data: quota } = await supabase
+      .from("quotas")
+      .select("parceiro")
+      .eq("id", id)
+      .single();
+
+    if (!quota) {
       return NextResponse.json(
         { error: "Cota não encontrada" },
         { status: 404 }
       );
     }
 
+    // Check if any registrations use this quota
+    const { count } = await supabase
+      .from("registrations")
+      .select("*", { count: "exact", head: true })
+      .eq("cota", quota.parceiro);
+
+    if (count && count > 0) {
+      return NextResponse.json(
+        { error: "Não é possível excluir cota com cadastros associados" },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase.from("quotas").delete().eq("id", id);
+    if (error) throw error;
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao excluir cota";
     console.error("Delete quota error:", error);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: "Erro ao excluir cota" },
+      { status: 500 }
+    );
   }
 }

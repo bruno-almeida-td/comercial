@@ -142,7 +142,7 @@ export default function CadastrosPage() {
                     )}
                   </td>
                   <td className="py-3 px-4 text-gray-500 text-xs">
-                    {p.dataCadastro}
+                    {new Date(p.created_at).toLocaleString("pt-BR")}
                   </td>
                 </tr>
               ))}

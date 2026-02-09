@@ -12,10 +12,10 @@ interface FormData {
   whatsapp: string;
   empresa: string;
   cpf: string;
-  nomeCredencial: string;
-  empresaCredencial: string;
-  necessidadesEspeciais: string;
-  atendimentoEspecifico: string;
+  nome_credencial: string;
+  empresa_credencial: string;
+  necessidades_especiais: string;
+  atendimento_especifico: string;
   vendedor: string;
   cota: string;
 }
@@ -27,10 +27,10 @@ const emptyForm: FormData = {
   whatsapp: "",
   empresa: "",
   cpf: "",
-  nomeCredencial: "",
-  empresaCredencial: "",
-  necessidadesEspeciais: "Não",
-  atendimentoEspecifico: "Não",
+  nome_credencial: "",
+  empresa_credencial: "",
+  necessidades_especiais: "Não",
+  atendimento_especifico: "Não",
   vendedor: "",
   cota: "",
 };
@@ -58,14 +58,14 @@ export default function CadastroPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
 
     // Auto-fill credential fields if empty
-    if (name === "nome" && !form.nomeCredencial) {
-      setForm((prev) => ({ ...prev, [name]: value, nomeCredencial: value }));
+    if (name === "nome" && !form.nome_credencial) {
+      setForm((prev) => ({ ...prev, [name]: value, nome_credencial: value }));
     }
-    if (name === "empresa" && !form.empresaCredencial) {
+    if (name === "empresa" && !form.empresa_credencial) {
       setForm((prev) => ({
         ...prev,
         [name]: value,
-        empresaCredencial: value,
+        empresa_credencial: value,
       }));
     }
   };
@@ -232,8 +232,8 @@ export default function CadastroPage() {
             <label className="label-field">Nome Credencial</label>
             <input
               type="text"
-              name="nomeCredencial"
-              value={form.nomeCredencial}
+              name="nome_credencial"
+              value={form.nome_credencial}
               onChange={handleChange}
               className="input-field"
               placeholder="Igual ao nome se vazio"
@@ -243,8 +243,8 @@ export default function CadastroPage() {
             <label className="label-field">Empresa Credencial</label>
             <input
               type="text"
-              name="empresaCredencial"
-              value={form.empresaCredencial}
+              name="empresa_credencial"
+              value={form.empresa_credencial}
               onChange={handleChange}
               className="input-field"
               placeholder="Igual à empresa se vazio"
@@ -256,8 +256,8 @@ export default function CadastroPage() {
           <div>
             <label className="label-field">Necessidades Especiais?</label>
             <select
-              name="necessidadesEspeciais"
-              value={form.necessidadesEspeciais}
+              name="necessidades_especiais"
+              value={form.necessidades_especiais}
               onChange={handleChange}
               className="input-field"
             >
@@ -268,8 +268,8 @@ export default function CadastroPage() {
           <div>
             <label className="label-field">Atendimento Específico?</label>
             <select
-              name="atendimentoEspecifico"
-              value={form.atendimentoEspecifico}
+              name="atendimento_especifico"
+              value={form.atendimento_especifico}
               onChange={handleChange}
               className="input-field"
             >

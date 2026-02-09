@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getParticipants, getQuotas } from "@/lib/sheets";
+import { supabase } from "@/lib/supabase";
 import { TOTAL_TICKETS } from "@/lib/constants";
 import { DashboardData } from "@/types";
 
@@ -7,22 +7,23 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const [participants, quotas] = await Promise.all([
-      getParticipants(),
-      getQuotas(),
+    const [{ count: cadastrados }, { data: quotas }] = await Promise.all([
+      supabase.from("registrations").select("*", { count: "exact", head: true }),
+      supabase.from("quotas").select("quantidade, usados"),
     ]);
 
-    const cadastrados = participants.length;
-    const reservados = quotas.reduce(
+    const reservados = (quotas || []).reduce(
       (acc, q) => acc + (q.quantidade - q.usados),
       0
     );
-    const livres = TOTAL_TICKETS - cadastrados - reservados;
+
+    const registered = cadastrados || 0;
+    const livres = TOTAL_TICKETS - registered - reservados;
 
     const data: DashboardData = {
       total: TOTAL_TICKETS,
       reservados: Math.max(0, reservados),
-      cadastrados,
+      cadastrados: registered,
       livres: Math.max(0, livres),
     };
 

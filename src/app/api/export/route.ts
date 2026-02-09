@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getParticipants } from "@/lib/sheets";
+import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
 
 export const dynamic = "force-dynamic";
@@ -9,49 +9,54 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
 
-    const participants = await getParticipants();
+    const { data: participants, error } = await supabase
+      .from("registrations")
+      .select("*")
+      .order("created_at", { ascending: true });
 
-    let data: Record<string, string>[];
+    if (error) throw error;
+
+    let rows: Record<string, string>[];
     let filename: string;
 
     if (type === "tax-summit") {
-      // Only event-required fields
-      data = participants.map((p) => ({
+      rows = (participants || []).map((p) => ({
         Nome: p.nome,
         "E-mail": p.email,
         Cargo: p.cargo,
         WhatsApp: p.whatsapp,
         Empresa: p.empresa,
         CPF: p.cpf,
-        "Nome Credencial": p.nomeCredencial,
-        "Empresa Credencial": p.empresaCredencial,
-        "Necessidades Especiais": p.necessidadesEspeciais,
-        "Atendimento Específico": p.atendimentoEspecifico,
+        "Nome Credencial": p.nome_credencial,
+        "Empresa Credencial": p.empresa_credencial,
+        "Necessidades Especiais": p.necessidades_especiais,
+        "Atendimento Específico": p.atendimento_especifico,
       }));
       filename = "tax-summit-2026-participantes.xlsx";
     } else if (type === "interno") {
-      // Full internal report
-      data = participants.map((p) => ({
+      rows = (participants || []).map((p) => ({
         Nome: p.nome,
         "E-mail": p.email,
         Cargo: p.cargo,
         WhatsApp: p.whatsapp,
         Empresa: p.empresa,
         CPF: p.cpf,
-        "Nome Credencial": p.nomeCredencial,
-        "Empresa Credencial": p.empresaCredencial,
-        "Necessidades Especiais": p.necessidadesEspeciais,
-        "Atendimento Específico": p.atendimentoEspecifico,
+        "Nome Credencial": p.nome_credencial,
+        "Empresa Credencial": p.empresa_credencial,
+        "Necessidades Especiais": p.necessidades_especiais,
+        "Atendimento Específico": p.atendimento_especifico,
         Vendedor: p.vendedor,
         Cota: p.cota || "—",
-        "Data Cadastro": p.dataCadastro,
+        "Data Cadastro": new Date(p.created_at).toLocaleString("pt-BR", {
+          timeZone: "America/Sao_Paulo",
+        }),
       }));
       filename = "relatorio-interno-tax-summit.xlsx";
     } else {
       return NextResponse.json({ error: "Tipo inválido" }, { status: 400 });
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
+    const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Dados");
 

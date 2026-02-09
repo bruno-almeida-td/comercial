@@ -6,13 +6,13 @@ export interface Participant {
   whatsapp: string;
   empresa: string;
   cpf: string;
-  nomeCredencial: string;
-  empresaCredencial: string;
-  necessidadesEspeciais: string;
-  atendimentoEspecifico: string;
+  nome_credencial: string;
+  empresa_credencial: string;
+  necessidades_especiais: string;
+  atendimento_especifico: string;
   vendedor: string;
-  cota: string;
-  dataCadastro: string;
+  cota: string | null;
+  created_at: string;
 }
 
 export interface Quota {
@@ -20,7 +20,7 @@ export interface Quota {
   parceiro: string;
   quantidade: number;
   usados: number;
-  dataCriacao: string;
+  created_at: string;
 }
 
 export interface DashboardData {
