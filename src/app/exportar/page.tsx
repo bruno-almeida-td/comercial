@@ -1,29 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import { getRegistrations } from "@/lib/storage";
 import { FileSpreadsheet, Download, FileText } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function ExportarPage() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  const handleExport = async (type: "tax-summit" | "interno") => {
+  const handleExport = (type: "tax-summit" | "interno") => {
     setDownloading(type);
-    try {
-      const res = await fetch(`/api/export?type=${type}`);
-      if (!res.ok) throw new Error("Erro ao exportar");
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        type === "tax-summit"
-          ? "tax-summit-2026-participantes.xlsx"
-          : "relatorio-interno-tax-summit.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+    try {
+      const participants = getRegistrations();
+
+      let rows: Record<string, string>[];
+      let filename: string;
+
+      if (type === "tax-summit") {
+        rows = participants.map((p) => ({
+          Nome: p.nome,
+          "E-mail": p.email,
+          Cargo: p.cargo,
+          WhatsApp: p.whatsapp,
+          Empresa: p.empresa,
+          CPF: p.cpf,
+          "Nome Credencial": p.nome_credencial,
+          "Empresa Credencial": p.empresa_credencial,
+          "Necessidades Especiais": p.necessidades_especiais,
+          "Atendimento Específico": p.atendimento_especifico,
+        }));
+        filename = "tax-summit-2026-participantes.xlsx";
+      } else {
+        rows = participants.map((p) => ({
+          Nome: p.nome,
+          "E-mail": p.email,
+          Cargo: p.cargo,
+          WhatsApp: p.whatsapp,
+          Empresa: p.empresa,
+          CPF: p.cpf,
+          "Nome Credencial": p.nome_credencial,
+          "Empresa Credencial": p.empresa_credencial,
+          "Necessidades Especiais": p.necessidades_especiais,
+          "Atendimento Específico": p.atendimento_especifico,
+          Vendedor: p.vendedor,
+          Cota: p.cota || "—",
+          "Data Cadastro": new Date(p.created_at).toLocaleString("pt-BR"),
+        }));
+        filename = "relatorio-interno-tax-summit.xlsx";
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Dados");
+      XLSX.writeFile(workbook, filename);
     } catch (error) {
       console.error("Erro ao exportar:", error);
       alert("Erro ao exportar dados. Tente novamente.");
@@ -42,7 +72,6 @@ export default function ExportarPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Tax Summit Export */}
         <div className="card flex flex-col items-center text-center">
           <div className="h-16 w-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
             <FileSpreadsheet size={32} className="text-green-600" />
@@ -63,7 +92,6 @@ export default function ExportarPage() {
           </button>
         </div>
 
-        {/* Internal Report */}
         <div className="card flex flex-col items-center text-center">
           <div className="h-16 w-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
             <FileText size={32} className="text-blue-600" />

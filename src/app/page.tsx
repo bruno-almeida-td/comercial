@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getRegistrations, getQuotas } from "@/lib/storage";
+import { TOTAL_TICKETS } from "@/lib/constants";
 import { DashboardData } from "@/types";
 import {
   Ticket,
@@ -12,23 +14,27 @@ import {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/dashboard");
-      const json = await res.json();
-      setData(json);
-    } catch (error) {
-      console.error("Erro ao carregar dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
+  const loadData = () => {
+    const registrations = getRegistrations();
+    const quotas = getQuotas();
+
+    const cadastrados = registrations.length;
+    const reservados = quotas.reduce(
+      (acc, q) => acc + (q.quantidade - q.usados),
+      0
+    );
+
+    setData({
+      total: TOTAL_TICKETS,
+      reservados: Math.max(0, reservados),
+      cadastrados,
+      livres: Math.max(0, TOTAL_TICKETS - cadastrados - reservados),
+    });
   };
 
   useEffect(() => {
-    fetchData();
+    loadData();
   }, []);
 
   const cards = data
@@ -74,81 +80,70 @@ export default function DashboardPage() {
           </p>
         </div>
         <button
-          onClick={fetchData}
-          disabled={loading}
+          onClick={loadData}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={16} />
           Atualizar
         </button>
       </div>
 
-      {loading && !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="card animate-pulse">
-              <div className="h-12 w-12 bg-gray-200 rounded-lg mb-4" />
-              <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
-              <div className="h-8 bg-gray-200 rounded w-16" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className="card">
-                <div
-                  className={`h-12 w-12 ${card.iconBg} rounded-lg flex items-center justify-center mb-4`}
-                >
-                  <Icon size={24} className={card.color.split(" ")[1]} />
+      {data ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {cards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div key={card.label} className="card">
+                  <div
+                    className={`h-12 w-12 ${card.iconBg} rounded-lg flex items-center justify-center mb-4`}
+                  >
+                    <Icon size={24} className={card.color.split(" ")[1]} />
+                  </div>
+                  <p className="text-sm text-gray-500">{card.label}</p>
+                  <p className="text-3xl font-bold mt-1">{card.value}</p>
                 </div>
-                <p className="text-sm text-gray-500">{card.label}</p>
-                <p className="text-3xl font-bold mt-1">{card.value}</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
 
-      {data && (
-        <div className="mt-8 card">
-          <h2 className="text-lg font-semibold mb-4">Utilização</h2>
-          <div className="w-full bg-gray-100 rounded-full h-6 overflow-hidden">
-            <div className="h-full flex">
-              <div
-                className="bg-green-500 transition-all duration-500"
-                style={{
-                  width: `${(data.cadastrados / data.total) * 100}%`,
-                }}
-                title={`Cadastrados: ${data.cadastrados}`}
-              />
-              <div
-                className="bg-amber-400 transition-all duration-500"
-                style={{
-                  width: `${(data.reservados / data.total) * 100}%`,
-                }}
-                title={`Reservados: ${data.reservados}`}
-              />
+          <div className="mt-8 card">
+            <h2 className="text-lg font-semibold mb-4">Utilização</h2>
+            <div className="w-full bg-gray-100 rounded-full h-6 overflow-hidden">
+              <div className="h-full flex">
+                <div
+                  className="bg-green-500 transition-all duration-500"
+                  style={{
+                    width: `${(data.cadastrados / data.total) * 100}%`,
+                  }}
+                  title={`Cadastrados: ${data.cadastrados}`}
+                />
+                <div
+                  className="bg-amber-400 transition-all duration-500"
+                  style={{
+                    width: `${(data.reservados / data.total) * 100}%`,
+                  }}
+                  title={`Reservados: ${data.reservados}`}
+                />
+              </div>
+            </div>
+            <div className="flex gap-6 mt-3 text-sm">
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-green-500 rounded-full" />
+                Cadastrados ({data.cadastrados})
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-amber-400 rounded-full" />
+                Reservados ({data.reservados})
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-gray-200 rounded-full" />
+                Livres ({data.livres})
+              </span>
             </div>
           </div>
-          <div className="flex gap-6 mt-3 text-sm">
-            <span className="flex items-center gap-2">
-              <span className="w-3 h-3 bg-green-500 rounded-full" />
-              Cadastrados ({data.cadastrados})
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-3 h-3 bg-amber-400 rounded-full" />
-              Reservados ({data.reservados})
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-3 h-3 bg-gray-200 rounded-full" />
-              Livres ({data.livres})
-            </span>
-          </div>
-        </div>
-      )}
+        </>
+      ) : null}
     </div>
   );
 }

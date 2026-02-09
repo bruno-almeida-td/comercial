@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { Quota } from "@/types";
 import { SELLERS } from "@/lib/constants";
+import { getQuotas, addRegistration } from "@/lib/storage";
 import { UserPlus, CheckCircle, AlertCircle } from "lucide-react";
 
 interface FormData {
@@ -38,17 +39,13 @@ const emptyForm: FormData = {
 export default function CadastroPage() {
   const [form, setForm] = useState<FormData>(emptyForm);
   const [quotas, setQuotas] = useState<Quota[]>([]);
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
   useEffect(() => {
-    fetch("/api/quotas")
-      .then((r) => r.json())
-      .then(setQuotas)
-      .catch(console.error);
+    setQuotas(getQuotas());
   }, []);
 
   const handleChange = (
@@ -57,7 +54,6 @@ export default function CadastroPage() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
 
-    // Auto-fill credential fields if empty
     if (name === "nome" && !form.nome_credencial) {
       setForm((prev) => ({ ...prev, [name]: value, nome_credencial: value }));
     }
@@ -86,32 +82,34 @@ export default function CadastroPage() {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setMessage(null);
 
     try {
-      const res = await fetch("/api/participants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      addRegistration({
+        nome: form.nome,
+        email: form.email,
+        cargo: form.cargo,
+        whatsapp: form.whatsapp,
+        empresa: form.empresa,
+        cpf: form.cpf,
+        nome_credencial: form.nome_credencial || form.nome,
+        empresa_credencial: form.empresa_credencial || form.empresa,
+        necessidades_especiais: form.necessidades_especiais,
+        atendimento_especifico: form.atendimento_especifico,
+        vendedor: form.vendedor,
+        cota: form.cota || null,
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Erro ao cadastrar");
-      }
 
       setMessage({ type: "success", text: "Participante cadastrado com sucesso!" });
       setForm(emptyForm);
+      setQuotas(getQuotas());
     } catch (error) {
       setMessage({
         type: "error",
         text: error instanceof Error ? error.message : "Erro ao cadastrar",
       });
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -320,11 +318,10 @@ export default function CadastroPage() {
         <div className="pt-4">
           <button
             type="submit"
-            disabled={submitting}
             className="btn-primary flex items-center gap-2"
           >
             <UserPlus size={18} />
-            {submitting ? "Cadastrando..." : "Cadastrar Participante"}
+            Cadastrar Participante
           </button>
         </div>
       </form>

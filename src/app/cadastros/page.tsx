@@ -2,28 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { Participant } from "@/types";
+import { getRegistrations } from "@/lib/storage";
 import { Users, Search, RefreshCw } from "lucide-react";
 
 export default function CadastrosPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const fetchParticipants = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/participants");
-      const data = await res.json();
-      setParticipants(data);
-    } catch {
-      console.error("Erro ao carregar cadastros");
-    } finally {
-      setLoading(false);
-    }
+  const loadData = () => {
+    setParticipants(getRegistrations().reverse());
   };
 
   useEffect(() => {
-    fetchParticipants();
+    loadData();
   }, []);
 
   const filtered = participants.filter((p) => {
@@ -47,16 +38,14 @@ export default function CadastrosPage() {
           </p>
         </div>
         <button
-          onClick={fetchParticipants}
-          disabled={loading}
+          onClick={loadData}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={16} />
           Atualizar
         </button>
       </div>
 
-      {/* Search */}
       <div className="card mb-6">
         <div className="relative">
           <Search
@@ -73,15 +62,8 @@ export default function CadastrosPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="card overflow-x-auto">
-        {loading ? (
-          <div className="animate-pulse space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded" />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="text-center py-12">
             <Users size={48} className="mx-auto text-gray-300 mb-4" />
             <p className="text-gray-400">
@@ -94,27 +76,13 @@ export default function CadastrosPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  Nome
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  E-mail
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  Empresa
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  Cargo
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  Vendedor
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  Cota
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
-                  Data
-                </th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Nome</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">E-mail</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Empresa</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Cargo</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Vendedor</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Cota</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Data</th>
               </tr>
             </thead>
             <tbody>

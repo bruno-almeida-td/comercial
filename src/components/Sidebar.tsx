@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   UserPlus,
   Users,
-  Trophy,
   FileSpreadsheet,
   Ticket,
 } from "lucide-react";
@@ -16,7 +15,6 @@ const navItems = [
   { href: "/cadastro", label: "Novo Cadastro", icon: UserPlus },
   { href: "/cadastros", label: "Cadastros", icon: Users },
   { href: "/cotas", label: "Cotas", icon: Ticket },
-  { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/exportar", label: "Exportar", icon: FileSpreadsheet },
 ];
 

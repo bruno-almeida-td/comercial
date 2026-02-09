@@ -2,81 +2,52 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { Quota } from "@/types";
+import {
+  getQuotas,
+  addQuota as addQuotaStorage,
+  deleteQuota as deleteQuotaStorage,
+} from "@/lib/storage";
 import { Ticket, Plus, Trash2, RefreshCw } from "lucide-react";
 
 export default function CotasPage() {
   const [quotas, setQuotas] = useState<Quota[]>([]);
-  const [loading, setLoading] = useState(true);
   const [parceiro, setParceiro] = useState("");
   const [quantidade, setQuantidade] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const fetchQuotas = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/quotas");
-      const data = await res.json();
-      setQuotas(data);
-    } catch {
-      console.error("Erro ao carregar cotas");
-    } finally {
-      setLoading(false);
-    }
+  const loadQuotas = () => {
+    setQuotas(getQuotas());
   };
 
   useEffect(() => {
-    fetchQuotas();
+    loadQuotas();
   }, []);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
 
-    try {
-      const res = await fetch("/api/quotas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          parceiro: parceiro.trim(),
-          quantidade: parseInt(quantidade, 10),
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
-
-      setParceiro("");
-      setQuantidade("");
-      await fetchQuotas();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar cota");
-    } finally {
-      setSubmitting(false);
+    if (!parceiro.trim()) {
+      setError("Nome do parceiro é obrigatório");
+      return;
     }
+
+    addQuotaStorage(parceiro.trim(), parseInt(quantidade, 10));
+    setParceiro("");
+    setQuantidade("");
+    loadQuotas();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm("Tem certeza que deseja excluir esta cota?")) return;
-    setDeleting(id);
     setError("");
 
-    try {
-      const res = await fetch(`/api/quotas?id=${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
-      await fetchQuotas();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao excluir cota");
-    } finally {
-      setDeleting(null);
+    const result = deleteQuotaStorage(id);
+    if (!result.success) {
+      setError(result.error || "Erro ao excluir cota");
+      return;
     }
+    loadQuotas();
   };
 
   const totalReservado = quotas.reduce((acc, q) => acc + q.quantidade, 0);
@@ -92,16 +63,14 @@ export default function CotasPage() {
           </p>
         </div>
         <button
-          onClick={fetchQuotas}
-          disabled={loading}
+          onClick={loadQuotas}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={16} />
           Atualizar
         </button>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="card text-center">
           <p className="text-sm text-gray-500">Total Reservado</p>
@@ -119,7 +88,6 @@ export default function CotasPage() {
         </div>
       </div>
 
-      {/* Add quota form */}
       <div className="card mb-8">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Plus size={20} />
@@ -149,32 +117,19 @@ export default function CotasPage() {
               required
             />
           </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn-primary whitespace-nowrap"
-          >
-            {submitting ? "Criando..." : "Criar Cota"}
+          <button type="submit" className="btn-primary whitespace-nowrap">
+            Criar Cota
           </button>
         </form>
-        {error && (
-          <p className="mt-3 text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </div>
 
-      {/* Quotas table */}
       <div className="card">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Ticket size={20} />
           Cotas Ativas
         </h2>
-        {loading ? (
-          <div className="animate-pulse space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded" />
-            ))}
-          </div>
-        ) : quotas.length === 0 ? (
+        {quotas.length === 0 ? (
           <p className="text-gray-400 text-center py-8">
             Nenhuma cota cadastrada
           </p>
@@ -183,24 +138,12 @@ export default function CotasPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">
-                    Parceiro
-                  </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500">
-                    Quantidade
-                  </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500">
-                    Usados
-                  </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500">
-                    Disponível
-                  </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500">
-                    Progresso
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">
-                    Ações
-                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Parceiro</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500">Quantidade</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500">Usados</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500">Disponível</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500">Progresso</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -245,12 +188,11 @@ export default function CotasPage() {
                       <td className="py-3 px-4 text-right">
                         <button
                           onClick={() => handleDelete(q.id)}
-                          disabled={deleting === q.id}
                           className="btn-danger inline-flex items-center gap-1"
                           title="Excluir cota"
                         >
                           <Trash2 size={14} />
-                          {deleting === q.id ? "..." : "Excluir"}
+                          Excluir
                         </button>
                       </td>
                     </tr>
