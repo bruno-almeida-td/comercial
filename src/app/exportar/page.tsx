@@ -1,29 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import { getParticipants } from "@/lib/storage";
 import { FileSpreadsheet, Download, FileText } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function ExportarPage() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  const handleExport = async (type: "tax-summit" | "interno") => {
+  const handleExport = (type: "tax-summit" | "interno") => {
     setDownloading(type);
-    try {
-      const res = await fetch(`/api/export?type=${type}`);
-      if (!res.ok) throw new Error("Erro ao exportar");
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download =
+    try {
+      const participants = getParticipants();
+
+      const rows =
+        type === "tax-summit"
+          ? participants.map((p) => ({
+              Nome: p.nome,
+              "E-mail": p.email,
+              Cargo: p.cargo,
+              WhatsApp: p.whatsapp,
+              Empresa: p.empresa,
+              CPF: p.cpf,
+              "Nome Credencial": p.nome_credencial,
+              "Empresa Credencial": p.empresa_credencial,
+              "Necessidades Especiais": p.necessidades_especiais,
+              "Atendimento Específico": p.atendimento_especifico,
+            }))
+          : participants.map((p) => ({
+              Nome: p.nome,
+              "E-mail": p.email,
+              Cargo: p.cargo,
+              WhatsApp: p.whatsapp,
+              Empresa: p.empresa,
+              CPF: p.cpf,
+              "Nome Credencial": p.nome_credencial,
+              "Empresa Credencial": p.empresa_credencial,
+              "Necessidades Especiais": p.necessidades_especiais,
+              "Atendimento Específico": p.atendimento_especifico,
+              Vendedor: p.vendedor,
+              Cota: p.cota || "—",
+              "Data Cadastro": new Date(p.created_at).toLocaleString("pt-BR"),
+            }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Participantes");
+
+      const filename =
         type === "tax-summit"
           ? "tax-summit-2026-participantes.xlsx"
           : "relatorio-interno-tax-summit.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+
+      XLSX.writeFile(wb, filename);
     } catch (error) {
       console.error("Erro ao exportar:", error);
       alert("Erro ao exportar dados. Tente novamente.");

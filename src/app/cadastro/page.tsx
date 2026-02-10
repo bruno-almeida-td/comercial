@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { Quota } from "@/types";
 import { SELLERS } from "@/lib/constants";
+import { getQuotas, addParticipant } from "@/lib/storage";
 import { UserPlus, CheckCircle, AlertCircle } from "lucide-react";
 
 interface FormData {
@@ -44,15 +45,12 @@ export default function CadastroPage() {
     text: string;
   } | null>(null);
 
-  const fetchQuotas = () => {
-    fetch("/api/quotas")
-      .then((r) => r.json())
-      .then(setQuotas)
-      .catch(console.error);
+  const loadQuotas = () => {
+    setQuotas(getQuotas());
   };
 
   useEffect(() => {
-    fetchQuotas();
+    loadQuotas();
   }, []);
 
   const handleChange = (
@@ -89,26 +87,29 @@ export default function CadastroPage() {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setMessage(null);
 
     try {
-      const res = await fetch("/api/participants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      addParticipant({
+        nome: form.nome,
+        email: form.email,
+        cargo: form.cargo,
+        whatsapp: form.whatsapp,
+        empresa: form.empresa,
+        cpf: form.cpf,
+        nome_credencial: form.nome_credencial || form.nome,
+        empresa_credencial: form.empresa_credencial || form.empresa,
+        necessidades_especiais: form.necessidades_especiais,
+        atendimento_especifico: form.atendimento_especifico,
+        vendedor: form.vendedor,
+        cota: form.cota || null,
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Erro ao cadastrar");
-      }
-
       setMessage({ type: "success", text: "Participante cadastrado com sucesso!" });
       setForm(emptyForm);
-      fetchQuotas();
+      loadQuotas();
     } catch (error) {
       setMessage({
         type: "error",

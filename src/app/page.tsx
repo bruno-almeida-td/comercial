@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DashboardData } from "@/types";
+import { getDashboardData } from "@/lib/storage";
 import {
   Ticket,
   BookmarkCheck,
@@ -12,19 +13,9 @@ import {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/dashboard");
-      const json = await res.json();
-      setData(json);
-    } catch (error) {
-      console.error("Erro ao carregar dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
+  const loadData = () => {
+    setData(getDashboardData());
   };
 
   useEffect(() => {
@@ -75,25 +66,14 @@ export default function DashboardPage() {
         </div>
         <button
           onClick={loadData}
-          disabled={loading}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={16} />
           Atualizar
         </button>
       </div>
 
-      {loading && !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="card animate-pulse">
-              <div className="h-12 w-12 bg-gray-200 rounded-lg mb-4" />
-              <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
-              <div className="h-8 bg-gray-200 rounded w-16" />
-            </div>
-          ))}
-        </div>
-      ) : data ? (
+      {data ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {cards.map((card) => {
