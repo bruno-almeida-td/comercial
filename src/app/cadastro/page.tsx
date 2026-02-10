@@ -2,7 +2,6 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { Quota } from "@/types";
-import { SELLERS } from "@/lib/constants";
 import { getQuotas, addParticipant } from "@/lib/storage";
 import { UserPlus, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -211,12 +210,7 @@ export default function CadastroPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className="label-field">Vendedor Responsável *</label>
-            <select name="vendedor" value={form.vendedor} onChange={handleChange} className="input-field" required>
-              <option value="">Selecione...</option>
-              {SELLERS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <input type="text" name="vendedor" value={form.vendedor} onChange={handleChange} className="input-field" placeholder="Nome do vendedor" required />
           </div>
           <div>
             <label className="label-field">Cota (opcional)</label>
