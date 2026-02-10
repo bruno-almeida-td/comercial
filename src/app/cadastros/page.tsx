@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { Participant } from "@/types";
-import { getRegistrations } from "@/lib/storage";
 import { Users, Search, RefreshCw } from "lucide-react";
 
 export default function CadastrosPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const loadData = () => {
-    setParticipants(getRegistrations().reverse());
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/participants");
+      const data = await res.json();
+      setParticipants(data);
+    } catch {
+      console.error("Erro ao carregar cadastros");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -39,19 +48,17 @@ export default function CadastrosPage() {
         </div>
         <button
           onClick={loadData}
+          disabled={loading}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           Atualizar
         </button>
       </div>
 
       <div className="card mb-6">
         <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={search}
@@ -63,13 +70,17 @@ export default function CadastrosPage() {
       </div>
 
       <div className="card overflow-x-auto">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-100 rounded" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <Users size={48} className="mx-auto text-gray-300 mb-4" />
             <p className="text-gray-400">
-              {search
-                ? "Nenhum resultado encontrado"
-                : "Nenhum participante cadastrado"}
+              {search ? "Nenhum resultado encontrado" : "Nenhum participante cadastrado"}
             </p>
           </div>
         ) : (
@@ -87,10 +98,7 @@ export default function CadastrosPage() {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b border-gray-50 hover:bg-gray-50"
-                >
+                <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium">{p.nome}</td>
                   <td className="py-3 px-4 text-gray-600">{p.email}</td>
                   <td className="py-3 px-4">{p.empresa}</td>

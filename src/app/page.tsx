@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getRegistrations, getQuotas } from "@/lib/storage";
-import { TOTAL_TICKETS } from "@/lib/constants";
 import { DashboardData } from "@/types";
 import {
   Ticket,
@@ -14,23 +12,19 @@ import {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const loadData = () => {
-    const registrations = getRegistrations();
-    const quotas = getQuotas();
-
-    const cadastrados = registrations.length;
-    const reservados = quotas.reduce(
-      (acc, q) => acc + (q.quantidade - q.usados),
-      0
-    );
-
-    setData({
-      total: TOTAL_TICKETS,
-      reservados: Math.max(0, reservados),
-      cadastrados,
-      livres: Math.max(0, TOTAL_TICKETS - cadastrados - reservados),
-    });
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/dashboard");
+      const json = await res.json();
+      setData(json);
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -81,14 +75,25 @@ export default function DashboardPage() {
         </div>
         <button
           onClick={loadData}
+          disabled={loading}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           Atualizar
         </button>
       </div>
 
-      {data ? (
+      {loading && !data ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card animate-pulse">
+              <div className="h-12 w-12 bg-gray-200 rounded-lg mb-4" />
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
+              <div className="h-8 bg-gray-200 rounded w-16" />
+            </div>
+          ))}
+        </div>
+      ) : data ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {cards.map((card) => {
