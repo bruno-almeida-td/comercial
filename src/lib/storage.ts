@@ -37,6 +37,25 @@ export function addParticipant(
   return participant;
 }
 
+export function deleteParticipant(id: string): void {
+  const participants = getParticipants();
+  const participant = participants.find((p) => p.id === id);
+  if (!participant) return;
+
+  // If linked to a quota, decrement usados
+  if (participant.cota) {
+    const quotas = getQuotas();
+    const idx = quotas.findIndex((q) => q.parceiro === participant.cota);
+    if (idx !== -1 && quotas[idx].usados > 0) {
+      quotas[idx].usados -= 1;
+      localStorage.setItem(QUOTAS_KEY, JSON.stringify(quotas));
+    }
+  }
+
+  const updated = participants.filter((p) => p.id !== id);
+  localStorage.setItem(PARTICIPANTS_KEY, JSON.stringify(updated));
+}
+
 // --- Quotas ---
 
 export function getQuotas(): Quota[] {

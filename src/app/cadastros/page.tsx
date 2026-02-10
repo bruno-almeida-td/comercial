@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Participant } from "@/types";
-import { getParticipants } from "@/lib/storage";
-import { Users, Search, RefreshCw } from "lucide-react";
+import { getParticipants, deleteParticipant } from "@/lib/storage";
+import { Users, Search, RefreshCw, Trash2 } from "lucide-react";
 
 export default function CadastrosPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -11,6 +11,12 @@ export default function CadastrosPage() {
 
   const loadData = () => {
     setParticipants(getParticipants());
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este cadastro?")) return;
+    deleteParticipant(id);
+    loadData();
   };
 
   useEffect(() => {
@@ -78,6 +84,7 @@ export default function CadastrosPage() {
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Vendedor</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Cota</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Data</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +110,12 @@ export default function CadastrosPage() {
                   </td>
                   <td className="py-3 px-4 text-gray-500 text-xs">
                     {new Date(p.created_at).toLocaleString("pt-BR")}
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <button onClick={() => handleDelete(p.id)} className="btn-danger inline-flex items-center gap-1" title="Excluir cadastro">
+                      <Trash2 size={14} />
+                      Excluir
+                    </button>
                   </td>
                 </tr>
               ))}
