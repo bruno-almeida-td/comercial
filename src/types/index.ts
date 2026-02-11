@@ -10,6 +10,7 @@ export interface Participant {
   empresa_credencial: string;
   necessidades_especiais: string;
   atendimento_especifico: string;
+  voucher: string;
   vendedor: string;
   cota: string | null;
   created_at: string;

@@ -16,6 +16,7 @@ interface FormData {
   empresa_credencial: string;
   necessidades_especiais: string;
   atendimento_especifico: string;
+  voucher: string;
   vendedor: string;
   cota: string;
 }
@@ -31,6 +32,7 @@ const emptyForm: FormData = {
   empresa_credencial: "",
   necessidades_especiais: "Não",
   atendimento_especifico: "Não",
+  voucher: "",
   vendedor: "",
   cota: "",
 };
@@ -103,6 +105,7 @@ export default function CadastroPage() {
         empresa_credencial: form.empresa_credencial || form.empresa,
         necessidades_especiais: form.necessidades_especiais,
         atendimento_especifico: form.atendimento_especifico,
+        voucher: form.voucher,
         vendedor: form.vendedor,
         cota: form.cota || null,
       });
@@ -208,6 +211,10 @@ export default function CadastroPage() {
         <hr className="border-gray-200" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="label-field">Código do Voucher *</label>
+            <input type="text" name="voucher" value={form.voucher} onChange={handleChange} className="input-field" placeholder="Ex: VCH-2026-001" required />
+          </div>
           <div>
             <label className="label-field">Vendedor Responsável *</label>
             <input type="text" name="vendedor" value={form.vendedor} onChange={handleChange} className="input-field" placeholder="Nome do vendedor" required />

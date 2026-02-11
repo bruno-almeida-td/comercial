@@ -27,6 +27,7 @@ export default function ExportarPage() {
               "Empresa Credencial": p.empresa_credencial,
               "Necessidades Especiais": p.necessidades_especiais,
               "Atendimento Específico": p.atendimento_especifico,
+              "Código do Voucher": p.voucher,
             }))
           : participants.map((p) => ({
               Nome: p.nome,
@@ -39,6 +40,7 @@ export default function ExportarPage() {
               "Empresa Credencial": p.empresa_credencial,
               "Necessidades Especiais": p.necessidades_especiais,
               "Atendimento Específico": p.atendimento_especifico,
+              "Código do Voucher": p.voucher,
               Vendedor: p.vendedor,
               Cota: p.cota || "—",
               "Data Cadastro": new Date(p.created_at).toLocaleString("pt-BR"),

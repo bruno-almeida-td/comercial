@@ -81,6 +81,7 @@ export default function CadastrosPage() {
                 <th className="text-left py-3 px-4 font-medium text-gray-500">E-mail</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Empresa</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Cargo</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Voucher</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Vendedor</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Cota</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Data</th>
@@ -94,6 +95,11 @@ export default function CadastrosPage() {
                   <td className="py-3 px-4 text-gray-600">{p.email}</td>
                   <td className="py-3 px-4">{p.empresa}</td>
                   <td className="py-3 px-4">{p.cargo}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-block bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full text-xs font-medium">
+                      {p.voucher}
+                    </span>
+                  </td>
                   <td className="py-3 px-4">
                     <span className="inline-block bg-primary-50 text-primary-700 px-2 py-1 rounded-full text-xs font-medium">
                       {p.vendedor}
