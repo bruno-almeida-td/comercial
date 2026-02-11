@@ -18,30 +18,17 @@ export default function ExportarPage() {
         type === "tax-summit"
           ? participants.map((p) => ({
               Nome: p.nome,
-              "E-mail": p.email,
-              Cargo: p.cargo,
-              WhatsApp: p.whatsapp,
               Empresa: p.empresa,
-              CPF: p.cpf,
-              "Nome Credencial": p.nome_credencial,
-              "Empresa Credencial": p.empresa_credencial,
-              "Necessidades Especiais": p.necessidades_especiais,
-              "Atendimento Específico": p.atendimento_especifico,
+              "E-mail": p.email,
+              WhatsApp: p.whatsapp,
               "Código do Voucher": p.voucher,
             }))
           : participants.map((p) => ({
               Nome: p.nome,
-              "E-mail": p.email,
-              Cargo: p.cargo,
-              WhatsApp: p.whatsapp,
               Empresa: p.empresa,
-              CPF: p.cpf,
-              "Nome Credencial": p.nome_credencial,
-              "Empresa Credencial": p.empresa_credencial,
-              "Necessidades Especiais": p.necessidades_especiais,
-              "Atendimento Específico": p.atendimento_especifico,
+              "E-mail": p.email,
+              WhatsApp: p.whatsapp,
               "Código do Voucher": p.voucher,
-              Vendedor: p.vendedor,
               Cota: p.cota || "—",
               "Data Cadastro": new Date(p.created_at).toLocaleString("pt-BR"),
             }));
@@ -52,8 +39,8 @@ export default function ExportarPage() {
 
       const filename =
         type === "tax-summit"
-          ? "tax-summit-2026-participantes.xlsx"
-          : "relatorio-interno-tax-summit.xlsx";
+          ? "tax-summit-2026-vouchers.xlsx"
+          : "relatorio-interno-vouchers.xlsx";
 
       XLSX.writeFile(wb, filename);
     } catch (error) {
@@ -69,7 +56,7 @@ export default function ExportarPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Exportar Dados</h1>
         <p className="text-gray-500 mt-1">
-          Exporte os dados dos participantes em planilha Excel
+          Exporte os dados dos vouchers entregues em planilha Excel
         </p>
       </div>
 
@@ -80,9 +67,8 @@ export default function ExportarPage() {
           </div>
           <h2 className="text-lg font-semibold mb-2">Planilha Tax Summit</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Exporta apenas os campos necessários para o evento: nome, e-mail,
-            cargo, WhatsApp, empresa, CPF, dados da credencial, necessidades
-            especiais e atendimento específico.
+            Exporta nome, empresa, e-mail, WhatsApp e código do voucher
+            de cada participante.
           </p>
           <button
             onClick={() => handleExport("tax-summit")}
@@ -100,9 +86,8 @@ export default function ExportarPage() {
           </div>
           <h2 className="text-lg font-semibold mb-2">Relatório Interno</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Exporta todos os campos incluindo vendedor responsável, cota
-            associada e data de cadastro. Ideal para controle interno e
-            acompanhamento da equipe comercial.
+            Exporta todos os campos incluindo cota associada e data de
+            cadastro. Ideal para controle interno.
           </p>
           <button
             onClick={() => handleExport("interno")}

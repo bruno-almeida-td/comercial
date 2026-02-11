@@ -1,8 +1,43 @@
 import { Participant, Quota, DashboardData } from "@/types";
-import { TOTAL_TICKETS } from "@/lib/constants";
 
 const PARTICIPANTS_KEY = "tax-summit-participants";
 const QUOTAS_KEY = "tax-summit-quotas";
+const VOUCHERS_KEY = "tax-summit-vouchers";
+
+// --- Vouchers ---
+
+export function getVouchers(): string[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(VOUCHERS_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+export function importVouchers(codes: string[]): number {
+  const existing = new Set(getVouchers());
+  const newCodes = codes
+    .map((c) => c.trim())
+    .filter((c) => c.length > 0 && !existing.has(c));
+  const updated = [...Array.from(existing), ...newCodes];
+  localStorage.setItem(VOUCHERS_KEY, JSON.stringify(updated));
+  return newCodes.length;
+}
+
+export function clearUnusedVouchers(): number {
+  const participants = getParticipants();
+  const usedSet = new Set(participants.map((p) => p.voucher));
+  const all = getVouchers();
+  const removed = all.filter((v) => !usedSet.has(v)).length;
+  const keep = all.filter((v) => usedSet.has(v));
+  localStorage.setItem(VOUCHERS_KEY, JSON.stringify(keep));
+  return removed;
+}
+
+export function getAvailableVouchers(): string[] {
+  const all = getVouchers();
+  const participants = getParticipants();
+  const usedSet = new Set(participants.map((p) => p.voucher));
+  return all.filter((v) => !usedSet.has(v));
+}
 
 // --- Participants ---
 
@@ -13,11 +48,18 @@ export function getParticipants(): Participant[] {
 }
 
 export function addParticipant(
-  data: Omit<Participant, "id" | "created_at">
+  data: Omit<Participant, "id" | "created_at" | "voucher">
 ): Participant {
+  const available = getAvailableVouchers();
+  if (available.length === 0) {
+    throw new Error("Nenhum voucher disponível. Importe vouchers primeiro.");
+  }
+
+  const voucher = available[0];
   const participants = getParticipants();
   const participant: Participant = {
     ...data,
+    voucher,
     id: `P-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     created_at: new Date().toISOString(),
   };
@@ -96,13 +138,15 @@ export function deleteQuota(id: string): { ok: boolean; error?: string } {
 // --- Dashboard ---
 
 export function getDashboardData(): DashboardData {
+  const vouchers = getVouchers();
   const participants = getParticipants();
   const quotas = getQuotas();
-  const cadastrados = participants.length;
+  const total = vouchers.length;
+  const entregues = participants.length;
+  const restantes = total - entregues;
   const reservados = quotas.reduce(
     (acc, q) => acc + (q.quantidade - q.usados),
     0
   );
-  const livres = Math.max(0, TOTAL_TICKETS - cadastrados - reservados);
-  return { total: TOTAL_TICKETS, reservados, cadastrados, livres };
+  return { total, entregues, restantes, reservados };
 }

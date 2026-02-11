@@ -29,8 +29,7 @@ export default function CadastrosPage() {
       p.nome.toLowerCase().includes(term) ||
       p.email.toLowerCase().includes(term) ||
       p.empresa.toLowerCase().includes(term) ||
-      p.vendedor.toLowerCase().includes(term) ||
-      p.cpf.includes(term)
+      p.voucher.toLowerCase().includes(term)
     );
   });
 
@@ -40,7 +39,7 @@ export default function CadastrosPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cadastros Realizados</h1>
           <p className="text-gray-500 mt-1">
-            {participants.length} participantes cadastrados
+            {participants.length} vouchers entregues
           </p>
         </div>
         <button
@@ -59,7 +58,7 @@ export default function CadastrosPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome, e-mail, empresa, vendedor ou CPF..."
+            placeholder="Buscar por nome, e-mail, empresa ou voucher..."
             className="input-field pl-10"
           />
         </div>
@@ -70,7 +69,7 @@ export default function CadastrosPage() {
           <div className="text-center py-12">
             <Users size={48} className="mx-auto text-gray-300 mb-4" />
             <p className="text-gray-400">
-              {search ? "Nenhum resultado encontrado" : "Nenhum participante cadastrado"}
+              {search ? "Nenhum resultado encontrado" : "Nenhum cadastro realizado"}
             </p>
           </div>
         ) : (
@@ -78,11 +77,10 @@ export default function CadastrosPage() {
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Nome</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">E-mail</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Empresa</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Cargo</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">E-mail</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">WhatsApp</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Voucher</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">Vendedor</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Cota</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Data</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">Ações</th>
@@ -92,17 +90,12 @@ export default function CadastrosPage() {
               {filtered.map((p) => (
                 <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium">{p.nome}</td>
-                  <td className="py-3 px-4 text-gray-600">{p.email}</td>
                   <td className="py-3 px-4">{p.empresa}</td>
-                  <td className="py-3 px-4">{p.cargo}</td>
+                  <td className="py-3 px-4 text-gray-600">{p.email}</td>
+                  <td className="py-3 px-4">{p.whatsapp}</td>
                   <td className="py-3 px-4">
-                    <span className="inline-block bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full text-xs font-medium">
+                    <span className="inline-block bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full text-xs font-medium font-mono">
                       {p.voucher}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="inline-block bg-primary-50 text-primary-700 px-2 py-1 rounded-full text-xs font-medium">
-                      {p.vendedor}
                     </span>
                   </td>
                   <td className="py-3 px-4">

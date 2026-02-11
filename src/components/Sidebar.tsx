@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Tags,
   UserPlus,
   Users,
   FileSpreadsheet,
@@ -12,6 +13,7 @@ import {
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/vouchers", label: "Vouchers", icon: Tags },
   { href: "/cadastro", label: "Novo Cadastro", icon: UserPlus },
   { href: "/cadastros", label: "Cadastros", icon: Users },
   { href: "/cotas", label: "Cotas", icon: Ticket },
@@ -25,7 +27,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col z-10">
       <div className="p-6 border-b border-gray-100">
         <h1 className="text-xl font-bold text-primary-700">Tax Summit 2026</h1>
-        <p className="text-xs text-gray-500 mt-1">Gestão de Ingressos</p>
+        <p className="text-xs text-gray-500 mt-1">Gestão de Vouchers</p>
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
@@ -49,7 +51,7 @@ export default function Sidebar() {
       </nav>
       <div className="p-4 border-t border-gray-100">
         <p className="text-xs text-gray-400 text-center">
-          150 ingressos disponíveis
+          Controle de vouchers exclusivos
         </p>
       </div>
     </aside>
