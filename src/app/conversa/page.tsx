@@ -3,7 +3,34 @@
 import { useEffect, useRef, useState } from "react";
 import { getQuotas, addParticipant, getAvailableVouchers } from "@/lib/storage";
 import { Quota } from "@/types";
-import { Send, Bot, User, CheckCircle, RotateCcw } from "lucide-react";
+import { Send, Bot, User, CheckCircle, RotateCcw, ClipboardPaste, MessageSquare } from "lucide-react";
+
+// --- Paste mode helpers ---
+interface Parsed {
+  nome: string; empresa: string; email: string; whatsapp: string; cpf: string; cota: string;
+}
+
+function parseText(text: string): Parsed {
+  const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/);
+  const cpfMatch = text.match(/\d{3}[\s.]?\d{3}[\s.]?\d{3}[\s.-]?\d{2}/);
+  const phoneMatch = text.match(/\(?\d{2}\)?\s?\d{4,5}[-\s]?\d{4}/);
+  const cpf = cpfMatch
+    ? cpfMatch[0].replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+    : "";
+  const rawPhone = phoneMatch ? phoneMatch[0].replace(/\D/g, "").slice(0, 11) : "";
+  let whatsapp = "";
+  if (rawPhone.length >= 10) {
+    whatsapp = rawPhone.length === 11
+      ? `(${rawPhone.slice(0,2)}) ${rawPhone.slice(2,7)}-${rawPhone.slice(7)}`
+      : `(${rawPhone.slice(0,2)}) ${rawPhone.slice(2,6)}-${rawPhone.slice(6)}`;
+  }
+  const lines = text.split("\n").map((l) => l.replace(/^(nome|name)[\s:]+/i, "").trim()).filter((l) => l.length > 2);
+  const dataPatterns = [/@/, /cpf/i, /celular/i, /email/i, /fone/i, /whatsapp/i, /empresa/i, /\d{3}\.\d{3}/];
+  const nameLine = lines.find((l) => !dataPatterns.some((p) => p.test(l))) || "";
+  const empresaMatch = text.match(/empresa[\s:]+(.+)/i);
+  const empresa = empresaMatch ? empresaMatch[1].trim() : "";
+  return { nome: nameLine, empresa, email: emailMatch?.[0] || "", whatsapp, cpf, cota: "" };
+}
 
 interface Message {
   from: "bot" | "user";
@@ -45,6 +72,14 @@ const formatWhatsApp = (value: string) => {
 };
 
 export default function ConversaPage() {
+  const [mode, setMode] = useState<"chat" | "paste">("chat");
+
+  // --- Paste mode state ---
+  const [raw, setRaw] = useState("");
+  const [parsed, setParsed] = useState<Parsed | null>(null);
+  const [pasteMsg, setPasteMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // --- Chat mode state ---
   const [messages, setMessages] = useState<Message[]>([]);
   const [step, setStep] = useState<StepKey>("nome");
   const [form, setForm] = useState<FormState>({ nome: "", empresa: "", email: "", whatsapp: "", cpf: "", cota: "" });
@@ -164,18 +199,94 @@ export default function ConversaPage() {
     }, 50);
   };
 
+  // --- Paste mode handlers ---
+  const handleParse = () => { if (raw.trim()) { setParsed(parseText(raw)); setPasteMsg(null); } };
+  const handlePasteConfirm = () => {
+    if (!parsed) return;
+    try {
+      const result = addParticipant({ nome: parsed.nome, empresa: parsed.empresa, email: parsed.email, whatsapp: parsed.whatsapp, cpf: parsed.cpf || undefined, cota: parsed.cota || null });
+      setPasteMsg({ type: "success", text: `Cadastrado! Voucher atribuído: ${result.voucher}` });
+      setRaw(""); setParsed(null);
+    } catch (e) {
+      setPasteMsg({ type: "error", text: e instanceof Error ? e.message : "Erro ao cadastrar" });
+    }
+  };
+
   return (
     <div className="max-w-2xl flex flex-col h-[calc(100vh-6rem)]">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cadastro Conversacional</h1>
-          <p className="text-gray-500 mt-1 text-sm">Registre participantes respondendo às perguntas</p>
+          <p className="text-gray-500 mt-1 text-sm">Registre participantes de forma rápida</p>
         </div>
-        <button onClick={handleReset} className="btn-secondary flex items-center gap-2 text-sm">
-          <RotateCcw size={16} />
-          Recomeçar
+        {mode === "chat" && (
+          <button onClick={handleReset} className="btn-secondary flex items-center gap-2 text-sm">
+            <RotateCcw size={16} /> Recomeçar
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-lg w-fit">
+        <button onClick={() => setMode("chat")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === "chat" ? "bg-white text-primary-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          <MessageSquare size={15} /> Perguntas
+        </button>
+        <button onClick={() => { setMode("paste"); setPasteMsg(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === "paste" ? "bg-white text-primary-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          <ClipboardPaste size={15} /> Colar tudo
         </button>
       </div>
+
+      {/* Paste mode */}
+      {mode === "paste" && (
+        <div className="space-y-4">
+          {pasteMsg && (
+            <div className={`p-4 rounded-lg flex items-center gap-3 ${pasteMsg.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+              {pasteMsg.type === "success" ? <CheckCircle size={20} /> : <span>⚠️</span>}
+              {pasteMsg.text}
+            </div>
+          )}
+          <div className="card space-y-4">
+            <label className="label-field flex items-center gap-2"><ClipboardPaste size={15} /> Cole os dados aqui</label>
+            <textarea value={raw} onChange={(e) => { setRaw(e.target.value); setParsed(null); setPasteMsg(null); }} rows={6} className="input-field resize-none font-mono text-sm"
+              placeholder={"Alberto dos Santos Barbosa\nCPF: 224.267.768-38\ne-mail: asbarbosa@sompo.com.br\nCelular: (11) 99544-9407\nEmpresa: Sompo"} />
+            <button onClick={handleParse} disabled={!raw.trim()} className="btn-primary flex items-center gap-2">
+              <ClipboardPaste size={16} /> Interpretar dados
+            </button>
+          </div>
+
+          {parsed && (
+            <div className="card space-y-4">
+              <p className="font-semibold text-gray-800">Confirme os dados extraídos</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(["nome","empresa","email","whatsapp","cpf"] as const).map((f) => (
+                  <div key={f}>
+                    <label className="label-field capitalize">{f === "whatsapp" ? "WhatsApp" : f}</label>
+                    <input type="text" value={parsed[f]} onChange={(e) => setParsed((p) => p ? { ...p, [f]: e.target.value } : p)} className="input-field" />
+                  </div>
+                ))}
+                <div>
+                  <label className="label-field">Cota (opcional)</label>
+                  <select value={parsed.cota} onChange={(e) => setParsed((p) => p ? { ...p, cota: e.target.value } : p)} className="input-field">
+                    <option value="">Sem cota</option>
+                    {availableQuotaNames.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button onClick={handlePasteConfirm} className="btn-primary flex items-center gap-2">
+                  <CheckCircle size={16} /> Confirmar e Cadastrar
+                </button>
+                <button onClick={() => { setParsed(null); setRaw(""); setPasteMsg(null); }} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 flex items-center gap-2 text-sm font-medium">
+                  <RotateCcw size={15} /> Limpar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chat mode */}
+      {mode === "chat" && (<>
 
       {/* Cotas disponíveis */}
       {availableQuotaNames.length > 0 && (
@@ -234,6 +345,7 @@ export default function ConversaPage() {
           </button>
         </div>
       )}
+      </>)}
     </div>
   );
 }
