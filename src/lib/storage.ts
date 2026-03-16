@@ -192,63 +192,6 @@ export function seedGugaData(): void {
   });
 }
 
-// --- Seed inicial: Participantes Sompo ---
-
-const SOMPO_PARTICIPANTS = [
-  {
-    nome: "Alberto dos Santos Barbosa",
-    empresa: "Sompo",
-    email: "asbarbosa@sompo.com.br",
-    whatsapp: "(11) 99544-9407",
-    cpf: "224.267.768-38",
-    cota: null,
-    voucher: "WB3PX9",
-  },
-  {
-    nome: "Nicolas Queiroz de Souza Silva",
-    empresa: "Sompo",
-    email: "nqssilva@sompo.com.br",
-    whatsapp: "(11) 91468-7955",
-    cpf: "459.684.338-41",
-    cota: null,
-    voucher: "T7YRQK",
-  },
-  {
-    nome: "Gabriel Felipe Lima",
-    empresa: "Sompo",
-    email: "gflima@sompo.com.br",
-    whatsapp: "(11) 98204-0746",
-    cpf: "443.828.758-89",
-    cota: null,
-    voucher: "5VHJDM",
-  },
-  {
-    nome: "Gabriela Furquim de Almeida",
-    empresa: "",
-    email: "gabriela.furquimdealmeida@gmail.com",
-    whatsapp: "(11) 95677-0908",
-    cpf: "230.085.488-06",
-    cota: null,
-    voucher: "CN4AUQ",
-  },
-];
-
-export function seedSompoParticipants(): void {
-  const participants = getParticipants();
-  const existingVouchers = new Set(participants.map((p) => p.voucher));
-  if (SOMPO_PARTICIPANTS.every((p) => existingVouchers.has(p.voucher))) return;
-
-  // Importa os vouchers
-  importVouchers(SOMPO_PARTICIPANTS.map((p) => p.voucher));
-
-  // Cria os participantes
-  SOMPO_PARTICIPANTS.forEach((p) => {
-    if (!existingVouchers.has(p.voucher)) {
-      addParticipantDirect(p);
-    }
-  });
-}
-
 // --- Dashboard ---
 
 export function getDashboardData(): DashboardData {
