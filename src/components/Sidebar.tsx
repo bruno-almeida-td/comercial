@@ -9,12 +9,14 @@ import {
   Users,
   FileSpreadsheet,
   Ticket,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vouchers", label: "Vouchers", icon: Tags },
   { href: "/cadastro", label: "Novo Cadastro", icon: UserPlus },
+  { href: "/conversa", label: "Cadastro por Chat", icon: MessageSquare },
   { href: "/cadastros", label: "Cadastros", icon: Users },
   { href: "/cotas", label: "Cotas", icon: Ticket },
   { href: "/exportar", label: "Exportar", icon: FileSpreadsheet },

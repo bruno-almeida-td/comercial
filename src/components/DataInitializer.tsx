@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { seedGugaData } from "@/lib/storage";
+import { seedGugaData, seedSompoParticipants } from "@/lib/storage";
 
 export default function DataInitializer() {
   useEffect(() => {
     seedGugaData();
+    seedSompoParticipants();
   }, []);
   return null;
 }

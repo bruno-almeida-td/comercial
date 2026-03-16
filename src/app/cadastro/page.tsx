@@ -10,6 +10,7 @@ interface FormData {
   empresa: string;
   email: string;
   whatsapp: string;
+  cpf: string;
   cota: string;
 }
 
@@ -18,6 +19,7 @@ const emptyForm: FormData = {
   empresa: "",
   email: "",
   whatsapp: "",
+  cpf: "",
   cota: "",
 };
 
@@ -65,6 +67,7 @@ export default function CadastroPage() {
         empresa: form.empresa,
         email: form.email,
         whatsapp: form.whatsapp,
+        cpf: form.cpf || undefined,
         cota: form.cota || null,
       });
       setMessage({
@@ -142,6 +145,10 @@ export default function CadastroPage() {
           <div>
             <label className="label-field">WhatsApp</label>
             <input type="text" name="whatsapp" value={form.whatsapp} onChange={(e) => setForm((prev) => ({ ...prev, whatsapp: formatWhatsApp(e.target.value) }))} className="input-field" placeholder="(11) 99999-9999" />
+          </div>
+          <div>
+            <label className="label-field">CPF</label>
+            <input type="text" name="cpf" value={form.cpf} onChange={handleChange} className="input-field" placeholder="000.000.000-00" />
           </div>
         </div>
 

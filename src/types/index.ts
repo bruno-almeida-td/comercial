@@ -4,6 +4,7 @@ export interface Participant {
   empresa: string;
   email: string;
   whatsapp: string;
+  cpf?: string;
   voucher: string;
   cota: string | null;
   created_at: string;
