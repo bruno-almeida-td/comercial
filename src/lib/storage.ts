@@ -135,6 +135,63 @@ export function deleteQuota(id: string): { ok: boolean; error?: string } {
   return { ok: true };
 }
 
+// --- Direct participant insert (bypasses voucher auto-assign) ---
+
+export function addParticipantDirect(
+  data: Omit<Participant, "id" | "created_at">
+): Participant | null {
+  const participants = getParticipants();
+  if (participants.some((p) => p.voucher === data.voucher)) return null; // idempotente
+
+  const participant: Participant = {
+    ...data,
+    id: `P-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    created_at: new Date().toISOString(),
+  };
+  participants.push(participant);
+  localStorage.setItem(PARTICIPANTS_KEY, JSON.stringify(participants));
+  return participant;
+}
+
+// --- Seed inicial: Cota Guga ---
+
+const GUGA_VOUCHERS = [
+  "GJU6GJ", "M833B8", "77F755", "6NYUUN", "N7ZL4B", "3NWRIA",
+  "YCA4PV", "IAUMRA", "R3K4PF", "Z6LERM", "8XUSMH", "TPTUY5",
+  "2AUG2A", "VL4RB4", "85TLRW", "GAWNZQ", "XQ1GE8", "34BR1D",
+  "YUXIXL", "M5SYA1", "UPZ6JB",
+];
+
+export function seedGugaData(): void {
+  const quotas = getQuotas();
+  if (quotas.some((q) => q.parceiro === "Guga")) return; // já inicializado
+
+  // Importa os vouchers
+  importVouchers(GUGA_VOUCHERS);
+
+  // Cria a cota Guga com todos já marcados como usados
+  const quota: Quota = {
+    id: `Q-GUGA`,
+    parceiro: "Guga",
+    quantidade: GUGA_VOUCHERS.length,
+    usados: GUGA_VOUCHERS.length,
+    created_at: new Date().toISOString(),
+  };
+  localStorage.setItem(QUOTAS_KEY, JSON.stringify([...quotas, quota]));
+
+  // Cria um registro de participante para cada voucher (controle interno)
+  GUGA_VOUCHERS.forEach((voucher) => {
+    addParticipantDirect({
+      nome: "Guga",
+      empresa: "Controle interno",
+      email: "",
+      whatsapp: "",
+      cota: "Guga",
+      voucher,
+    });
+  });
+}
+
 // --- Dashboard ---
 
 export function getDashboardData(): DashboardData {

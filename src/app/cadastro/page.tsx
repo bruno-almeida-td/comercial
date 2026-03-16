@@ -128,20 +128,20 @@ export default function CadastroPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="label-field">Nome *</label>
-            <input type="text" name="nome" value={form.nome} onChange={handleChange} className="input-field" required />
+            <label className="label-field">Nome</label>
+            <input type="text" name="nome" value={form.nome} onChange={handleChange} className="input-field" />
           </div>
           <div>
-            <label className="label-field">Empresa *</label>
-            <input type="text" name="empresa" value={form.empresa} onChange={handleChange} className="input-field" required />
+            <label className="label-field">Empresa</label>
+            <input type="text" name="empresa" value={form.empresa} onChange={handleChange} className="input-field" />
           </div>
           <div>
-            <label className="label-field">E-mail *</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} className="input-field" required />
+            <label className="label-field">E-mail</label>
+            <input type="email" name="email" value={form.email} onChange={handleChange} className="input-field" />
           </div>
           <div>
-            <label className="label-field">WhatsApp *</label>
-            <input type="text" name="whatsapp" value={form.whatsapp} onChange={(e) => setForm((prev) => ({ ...prev, whatsapp: formatWhatsApp(e.target.value) }))} className="input-field" placeholder="(11) 99999-9999" required />
+            <label className="label-field">WhatsApp</label>
+            <input type="text" name="whatsapp" value={form.whatsapp} onChange={(e) => setForm((prev) => ({ ...prev, whatsapp: formatWhatsApp(e.target.value) }))} className="input-field" placeholder="(11) 99999-9999" />
           </div>
         </div>
 
@@ -158,7 +158,7 @@ export default function CadastroPage() {
         </div>
 
         <div className="pt-4">
-          <button type="submit" disabled={submitting || noVouchers} className="btn-primary flex items-center gap-2">
+          <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-2">
             <UserPlus size={18} />
             {submitting ? "Cadastrando..." : "Cadastrar e Atribuir Voucher"}
           </button>

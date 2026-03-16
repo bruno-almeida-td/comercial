@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import DataInitializer from "@/components/DataInitializer";
 
 export const metadata: Metadata = {
   title: "Tax Summit 2026 - Gestão de Ingressos",
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="font-sans">
+        <DataInitializer />
         <Sidebar />
         <main className="ml-64 min-h-screen p-8">{children}</main>
       </body>
